@@ -21,6 +21,8 @@ export default function Canvas() {
   const stageRef = useRef<Konva.Stage>(null);
   // Состояние для хранения фигур
   const [shapes, setShapes] = useState<Shape[]>([]);
+  // Начальный масштаб сцены
+  const [scale, setScale] = useState(1);
 
   // Обработчик клика по сцене
   function handleStageClick(_event: Konva.KonvaEventObject<MouseEvent>) {
@@ -37,8 +39,8 @@ export default function Canvas() {
     const offsetY = stagePos.y;
 
     // Корректируем координаты с учётом сдвига для правильного отображения фигуры в сцене а не в окне просмотра, так сцена может быть свдинута
-    const correctedX = pointer.x - offsetX; // Корректируем координаты
-    const correctedY = pointer.y - offsetY; // Корректируем координаты
+    const correctedX = (pointer.x - offsetX) / scale; // Делим на масштаб, чтобы координаты были правильные
+    const correctedY = (pointer.y - offsetY) / scale; // Делим на масштаб, чтобы координаты были правильные
 
     // Выбираем случайный цвет
     const colors = ["red", "blue", "green", "purple", "orange"];
@@ -61,6 +63,51 @@ export default function Canvas() {
     setShapes([...shapes, newShape]);
   }
 
+  // Обработчик колесика мыши для зумирования относительно курсора
+  function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const scaleBy = 1.1;
+    let newScale = scale;
+
+    // Прокрутка вверх — увеличиваем масштаб, вниз — уменьшаем
+    if (e.evt.deltaY > 0) {
+      newScale /= scaleBy;
+    } else {
+      newScale *= scaleBy;
+    }
+
+    // Ограничиваем пределы масштаба
+    if (newScale > 10) newScale = 10;
+    if (newScale < 0.1) newScale = 0.1;
+
+    const pointer = stage.getPointerPosition(); // Получаем позицию курсора
+    if (!pointer) return;
+
+    const oldPos = stage.position(); // Получаем старую позицию сцены
+    const mousePointTo = {
+      x: (pointer.x - oldPos.x) / scale, // Координаты курсора относительно сцены
+      y: (pointer.y - oldPos.y) / scale,
+    };
+
+    // Устанавливаем новый масштаб
+    stage.scale({ x: newScale, y: newScale });
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+
+    // Перемещаем сцену, чтобы центр курсора оставался на месте
+    stage.position(newPos);
+
+    setScale(newScale);
+
+    // Перерисовываем сцену
+    stage.batchDraw();
+  }
+
   return (
     <Stage
       width={window.innerWidth}
@@ -68,6 +115,7 @@ export default function Canvas() {
       draggable
       ref={stageRef}
       onMouseDown={handleStageClick}
+      onWheel={handleWheel}
     >
       <Layer>
         {/* Фон */}
