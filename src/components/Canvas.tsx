@@ -23,9 +23,13 @@ export default function Canvas() {
   const [shapes, setShapes] = useState<Shape[]>([]);
   // Начальный масштаб сцены
   const [scale, setScale] = useState(1);
+  // Состояние для отслеживания сдвига сцены
+  const [isDragging, setIsDragging] = useState(false);
 
   // Обработчик клика по сцене
-  function handleStageClick(_event: Konva.KonvaEventObject<MouseEvent>) {
+  function handleStageClick(_event: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
+    if (isDragging) return; // Если сцена двигалась, не добавляем фигуру
+    
     const stage = stageRef.current; // Получаем ссылку на сцену
     if (!stage) return; // Если сцена не создана, выходим
 
@@ -63,6 +67,17 @@ export default function Canvas() {
     setShapes([...shapes, newShape]);
   }
 
+  // Обработчик для изменения курсора при начале перетаскивания
+  function handleDragStart() {
+    setIsDragging(true);
+    document.body.style.cursor = "grabbing";
+  }
+  // Обработчик для изменения курсора при окончании перетаскивания
+  function handleDragEnd() {
+    setIsDragging(false);
+    document.body.style.cursor = "default";
+  }
+  
   // Обработчик колесика мыши для зумирования относительно курсора
   function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     const stage = stageRef.current;
@@ -114,13 +129,16 @@ export default function Canvas() {
       height={window.innerHeight}
       draggable
       ref={stageRef}
-      onMouseDown={handleStageClick}
+      onMouseUp={handleStageClick}
       onWheel={handleWheel}
+      onTouchEnd={handleStageClick}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
     >
       <Layer>
         {/* Фон */}
         {/* Делаем прямоугольник такой ширины и сдвигаем его относителоьно сцены чтобы он покрывал ее с запасом */}
-        <Rect x={-10000} y={-10000} width={20000} height={20000} fill="lightgrey" />
+        <Rect x={-100000} y={-100000} width={200000} height={200000} fill="lightgrey" />
 
         {/* Отрисовка фигур */}
         {shapes.map((shape) => {
