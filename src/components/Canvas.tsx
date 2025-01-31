@@ -18,7 +18,7 @@ interface Shape {
 
 export default function Canvas() {
   // Создаём ссылку на сцену
-  const stageRef = useRef<Konva.Stage & { previousDistance?: number }>(null);
+  const stageRef = useRef<Konva.Stage>(null);
   // Состояние для хранения фигур
   const [shapes, setShapes] = useState<Shape[]>([]);
   // Начальный масштаб сцены
@@ -27,7 +27,7 @@ export default function Canvas() {
   const [isDragging, setIsDragging] = useState(false);
 
   // Обработчик клика по сцене
-  function handleStageClick(_event: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
+  function handleStageClick(_e: Konva.KonvaEventObject<MouseEvent>) {
     if (isDragging) return; // Если сцена двигалась, не добавляем фигуру
     
     const stage = stageRef.current; // Получаем ссылку на сцену
@@ -72,7 +72,6 @@ export default function Canvas() {
     setIsDragging(true);
     document.body.style.cursor = "grabbing";
   }
-
   // Обработчик для изменения курсора при окончании перетаскивания
   function handleDragEnd() {
     setIsDragging(false);
@@ -124,45 +123,6 @@ export default function Canvas() {
     stage.batchDraw();
   }
 
-  // Обработчик для мобильного зума
-  function handleTouchMove(e: Konva.KonvaEventObject<TouchEvent>) {
-    const stage = stageRef.current;
-    if (!stage || e.evt.touches.length !== 2) return;
-
-    const touch1 = e.evt.touches[0];
-    const touch2 = e.evt.touches[1];
-
-    const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (stage.previousDistance !== undefined) {
-      const scaleBy = 1.05;
-      let newScale = scale;
-
-      if (distance > stage.previousDistance) {
-        newScale *= scaleBy;
-      } else {
-        newScale /= scaleBy;
-      }
-
-      newScale = Math.max(0.1, Math.min(10, newScale)); // Ограничиваем масштаб
-
-      stage.scale({ x: newScale, y: newScale });
-      setScale(newScale);
-      stage.batchDraw();
-    }
-
-    stage.previousDistance = distance;
-  }
-
-  // Очищаем после завершения жеста
-  function handleTouchEnd() {
-    if (stageRef.current) {
-      delete stageRef.current.previousDistance;
-    }
-  }
-
   return (
     <Stage
       width={window.innerWidth}
@@ -171,10 +131,8 @@ export default function Canvas() {
       ref={stageRef}
       onMouseUp={handleStageClick}
       onWheel={handleWheel}
-      onTouchEnd={handleTouchEnd}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onTouchMove={handleTouchMove}
     >
       <Layer>
         {/* Фон */}
