@@ -97,30 +97,41 @@ export default function Canvas() {
     if (newScale > 10) newScale = 10;
     if (newScale < 0.1) newScale = 0.1;
 
-    const pointer = stage.getPointerPosition(); // Получаем позицию курсора
+    const pointer = stage.getPointerPosition(); // Получаем позицию курсора на сцене до зума
     if (!pointer) return;
 
-    const oldPos = stage.position(); // Получаем старую позицию сцены
+    const oldPos = stage.position(); // Получаем позицию сцены
     const mousePointTo = {
-      x: (pointer.x - oldPos.x) / scale, // Координаты курсора относительно сцены
+      x: (pointer.x - oldPos.x) / scale, // Координаты курсора относительно сцены до зума, но с учетом масштаба
       y: (pointer.y - oldPos.y) / scale,
     };
 
     // Устанавливаем новый масштаб
     stage.scale({ x: newScale, y: newScale });
 
+    // Пересчитываем позицию сцены относительно координат курсора на сцене c учетом нового масштаба
     const newPos = {
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     };
 
-    // Перемещаем сцену, чтобы центр курсора оставался на месте
+    // Перемещаем сцену в новые координаты курсора
     stage.position(newPos);
 
     setScale(newScale);
 
     // Перерисовываем сцену
     stage.batchDraw();
+  }
+
+  // Обработчик для изменения позиции фигуры при перетаскивании
+  function handleShapeDragMove(e: Konva.KonvaEventObject<DragEvent>, shapeId: string) {
+    const updatedShapes = shapes.map((shape) =>
+      shape.id === shapeId
+        ? { ...shape, x: e.target.x(), y: e.target.y() }
+        : shape
+    );
+    setShapes(updatedShapes);
   }
 
   return (
@@ -151,6 +162,8 @@ export default function Canvas() {
                   width={shape.size}
                   height={shape.size}
                   fill={shape.color}
+                  draggable
+                  onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
                 />
               );
             case "circle":
@@ -161,6 +174,8 @@ export default function Canvas() {
                   y={shape.y}
                   radius={shape.size / 2}
                   fill={shape.color}
+                  draggable
+                  onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
                 />
               );
             case "triangle":
@@ -176,6 +191,8 @@ export default function Canvas() {
                   ]}
                   fill={shape.color}
                   closed
+                  draggable
+                  onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
                 />
               );
             default:
