@@ -22,9 +22,9 @@ export default function Canvas() {
   // Состояние для хранения фигур
   const [shapes, setShapes] = useState<Shape[]>([]);
   // Начальный масштаб сцены
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState<number>(1);
   // Состояние для отслеживания сдвига сцены
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   // Обработчик клика по сцене
   function handleStageClick(_e: Konva.KonvaEventObject<MouseEvent>) {
