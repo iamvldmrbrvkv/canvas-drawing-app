@@ -26,6 +26,16 @@ export default function Canvas() {
   // Состояние для отслеживания сдвига сцены
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
+  // Функция для генерации случайного цвета
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
   // Обработчик клика по сцене
   function handleStageClick(_e: Konva.KonvaEventObject<MouseEvent>) {
     if (isDragging) return; // Если сцена двигалась, не добавляем фигуру
@@ -47,8 +57,7 @@ export default function Canvas() {
     const correctedY = (pointer.y - offsetY) / scale; // Делим на масштаб, чтобы координаты были правильные
 
     // Выбираем случайный цвет
-    const colors = ["red", "blue", "green", "purple", "orange"];
-    const color = colors[Math.floor(Math.random() * colors.length)];
+    const color = getRandomColor();
 
     // Рандомно выбираем фигуру
     const shapeTypes: ShapeType[] = ["rectangle", "circle", "triangle"];
