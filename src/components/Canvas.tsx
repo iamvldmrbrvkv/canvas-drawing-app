@@ -5,9 +5,10 @@ import { v4 as uuidv4 } from "uuid";
 import PanToolIcon from '@mui/icons-material/PanTool';
 import IconButton from '@mui/material/IconButton';
 import BrushIcon from '@mui/icons-material/Brush';
-import { Box } from "@mui/material";
 import AdsClickIcon from '@mui/icons-material/AdsClick';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { Box, Menu, MenuItem, Slider, Typography } from "@mui/material";
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 // Тип фигуры
 type ShapeType = "rectangle" | "circle" | "triangle";
@@ -31,45 +32,10 @@ export default function Canvas() {
   const [scale, setScale] = useState<number>(1);
   const [scaleShapeId, setScaleShapeId] = useState<string>('');
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
-  /* const [isActiveIconButton, setIsActiveIconButton] = useState<boolean>(false);
-  const [isActiveBrushIcon, setisActiveBrushIcon] = useState<boolean>(false);
-  const [isActivePanToolIcon, setIsActivePanToolIcon] = useState<boolean>(false); */
-  const [activeButton, setActiveButton] = useState<'pan' | 'brush' | 'click' | null>(null);
-
-  const handleClickIconButton = () => {
-    setActiveButton(activeButton === 'click' ? null : 'click');
-    setIsDrawing(false);
-  };
-
-  const handleClickBrushIcon = () => {
-    setActiveButton(activeButton === 'brush' ? null : 'brush');
-    setIsDrawing(true);
-  };
-
-  const handleClickPanToolIcon = () => {
-    setActiveButton(activeButton === 'pan' ? null : 'pan');
-    setIsDrawing(false);
-  };
-
-  function handleReset() {
-    setShapes([]); // Очистить все фигуры
-    setScale(1);   // Сбросить масштаб
-    setScaleShapeId(''); // Очистить id фигуры для масштабирования
-  }
-
-  function draggableOn() {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    stage.draggable(true);
-  }
-
-  function draggableOff() {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    stage.draggable(false);
-  }
+  const [activeButton, setActiveButton] = useState<'pan' | 'brush' | 'click' | null>('click');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
+  const [helpMenuAnchorEl, setHelpMenuAnchorEl] = useState<null | HTMLElement>(null);
 
   // Функция для генерации случайного цвета
   const getRandomColor = () => {
@@ -88,7 +54,6 @@ export default function Canvas() {
     if (!stage || stage.draggable()) return; // Если сцена не создана или уже draggable, выходим
 
     const clickedShape = e.target;
-    console.log("clickedShape", clickedShape)
 
     if (clickedShape.name() !== 'background') {
       return; // Если клик был на фоне, не добавляем новую фигуру
@@ -126,7 +91,6 @@ export default function Canvas() {
 
     setShapes([...shapes, newShape]);
     setScaleShapeId(id)
-    console.log("handleAddShape")
   }
 
   function handleStartDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
@@ -139,26 +103,22 @@ export default function Canvas() {
           : shape
       );
       setShapes(updatedShapes);
-      console.log("handleStartDrawingShape");
     }
   }
 
   function handleStopDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
     if (scaleShapeId !== '') {
       setScaleShapeId('');
-      console.log("handleStopDrawingShape")
     }
   }
 
   // Обработчик для изменения курсора при начале перетаскивания
   function handleDragStart() {
     document.body.style.cursor = "grabbing";
-    console.log("handleDragStart")
   }
   // Обработчик для изменения курсора при окончании перетаскивания
   function handleDragEnd() {
     document.body.style.cursor = "default";
-    console.log("handleDragEnd")
   }
 
   // Обработчик колесика мыши для зумирования относительно курсора
@@ -217,6 +177,73 @@ export default function Canvas() {
     setShapes(updatedShapes);
   }
 
+  const handleClickIconButton = () => {
+    setActiveButton(activeButton === 'click' ? null : 'click');
+    setIsDrawing(false);
+  };
+
+  const handleClickBrushIcon = () => {
+    setActiveButton(activeButton === 'brush' ? null : 'brush');
+    setIsDrawing(true);
+  };
+
+  const handleClickPanToolIcon = () => {
+    setActiveButton(activeButton === 'pan' ? null : 'pan');
+    setIsDrawing(false);
+  };
+
+  function handleReset() {
+    setShapes([]); // Очистить все фигуры
+    setScale(1);   // Сбросить масштаб
+    setScaleShapeId(''); // Очистить id фигуры для масштабирования
+  }
+
+  function draggableOn() {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    stage.draggable(true);
+  }
+
+  function draggableOff() {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    stage.draggable(false);
+  }
+
+  function handleShapeClick(e: Konva.KonvaEventObject<MouseEvent>, shapeId: string) {
+    setSelectedShapeId(shapeId);
+    setAnchorEl(e.evt.currentTarget as HTMLElement);
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleChangeColor = (color: string) => {
+    if (selectedShapeId) {
+      const updatedShapes = shapes.map((shape) =>
+        shape.id === selectedShapeId ? { ...shape, color } : shape
+      );
+      setShapes(updatedShapes);
+    }
+    handleMenuClose();
+  };
+
+  const handleSizeChange = (size: number) => {
+    if (selectedShapeId) {
+      const updatedShapes = shapes.map((shape) =>
+        shape.id === selectedShapeId ? { ...shape, size } : shape
+      );
+      setShapes(updatedShapes);
+    }
+  };
+
+  const handleHelpClick = (event: React.MouseEvent<HTMLElement>) => {
+    setHelpMenuAnchorEl(helpMenuAnchorEl ? null : event.currentTarget);
+  };
+
   return (
     <>
       <Box
@@ -254,6 +281,11 @@ export default function Canvas() {
         >
           <RefreshIcon />
         </IconButton>
+        <IconButton
+          onClick={handleHelpClick}
+        >
+          <QuestionMarkIcon />
+        </IconButton>
       </Box>
       <Stage
         width={window.innerWidth}
@@ -277,6 +309,7 @@ export default function Canvas() {
               case "rectangle":
                 return (
                   <Rect
+                    onClick={(e) => handleShapeClick(e, shape.id)}
                     key={shape.id}
                     x={shape.x}
                     y={shape.y}
@@ -290,6 +323,7 @@ export default function Canvas() {
               case "circle":
                 return (
                   <Circle
+                    onClick={(e) => handleShapeClick(e, shape.id)}
                     key={shape.id}
                     x={shape.x}
                     y={shape.y}
@@ -304,6 +338,7 @@ export default function Canvas() {
                 const halfSize = size / 2;
                 return (
                   <Line
+                    onClick={(e) => handleShapeClick(e, shape.id)}
                     key={shape.id}
                     points={[
                       shape.x, shape.y - halfSize, // Верхняя точка
@@ -322,6 +357,85 @@ export default function Canvas() {
           })}
         </Layer>
       </Stage>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        slotProps={{
+          paper: {
+            style: { backgroundColor: "lightgrey", minWidth: 170 },
+          },
+        }}
+      >
+        <MenuItem sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography>Цвет</Typography>
+          <input
+            type="color"
+            onChange={(e) => handleChangeColor(e.target.value)}
+            value={selectedShapeId ? shapes.find(shape => shape.id === selectedShapeId)?.color : "#000000"}
+          />
+        </MenuItem>
+        <MenuItem sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography>Размер</Typography>
+          <Slider
+            value={selectedShapeId ? shapes.find(shape => shape.id === selectedShapeId)?.size || 50 : 50}
+            onChange={(_e, newSize) => handleSizeChange(newSize as number)}
+            min={50}
+            max={150}
+            sx={{ width: 1/2 }}
+          />
+        </MenuItem>
+      </Menu>
+      <Menu
+        anchorEl={helpMenuAnchorEl}
+        open={Boolean(helpMenuAnchorEl)}
+        onClose={() => setHelpMenuAnchorEl(null)}
+        slotProps={{
+          paper: {
+            style: { backgroundColor: "lightgrey", minWidth: 250 },
+          },
+        }}
+      >
+        <MenuItem>
+          <Typography variant="h6">Как использовать:</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>Используйте кнопки на панели инструментов для управления:</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - Режим "Добавление фигур" для добавления фигур</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - Режим "Рисование" для добавления и изменения размера фигуры на лету</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - Режим "Перемещение" для перемещения сцены</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - Режим "Сброс" для очистки сцены</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - Справка</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>Возможности:</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - Изменение масштаба сцены - используйте колесико мыши</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - В режиме "Добавление фигур" - нажмите на холст, чтобы добавить фигуру</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - В режимах "Добавление фигур", "Рисование" и "Перемещение" - нажмите и удерживайте фигуру, чтобы переместить ее</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - В режимах "Добавление фигур", "Рисование" и "Перемещение" - нажмите на фигуру, чтобы изменить цвет или размер в выпадающем меню</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - В режиме "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
+        </MenuItem>
+      </Menu>
     </>
   );
 }
