@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import Konva from "konva";
-import { Stage, Layer, Rect, Circle, Line } from "react-konva";
+import { Stage, Layer, Rect } from "react-konva";
 import { v4 as uuidv4 } from "uuid";
 import PanToolIcon from '@mui/icons-material/PanTool';
 import IconButton from '@mui/material/IconButton';
@@ -9,6 +9,10 @@ import AdsClickIcon from '@mui/icons-material/AdsClick';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { Box, Menu, MenuItem, Slider, Typography } from "@mui/material";
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import { MemoizedRect } from "./Rectangle";
+import { MemoizedCircle } from "./Circle";
+import { MemoizedTriangle } from "./Triangle";
+
 
 // Тип фигуры
 type ShapeType = "rectangle" | "circle" | "triangle";
@@ -168,14 +172,13 @@ export default function Canvas() {
   }
 
   // Обработчик для изменения позиции фигуры при перетаскивании
-  function handleShapeDragMove(e: Konva.KonvaEventObject<DragEvent>, shapeId: string) {
-    const updatedShapes = shapes.map((shape) =>
+  const handleShapeDragMove = useCallback((e: Konva.KonvaEventObject<DragEvent>, shapeId: string) => {
+    setShapes(prevShapes => prevShapes.map((shape) =>
       shape.id === shapeId
         ? { ...shape, x: e.target.x(), y: e.target.y() }
         : shape
-    );
-    setShapes(updatedShapes);
-  }
+    ));
+  }, []);
 
   const handleClickIconButton = () => {
     setActiveButton(activeButton === 'click' ? null : 'click');
@@ -193,10 +196,18 @@ export default function Canvas() {
   };
 
   function handleReset() {
+    const stage = stageRef.current;
+    if (stage) {
+      stage.scale({ x: 1, y: 1 });
+      stage.position({ x: 0, y: 0 }); // Сбросить позицию
+      stage.batchDraw();
+    }
+    
     setShapes([]); // Очистить все фигуры
     setScale(1);   // Сбросить масштаб
     setScaleShapeId(''); // Очистить id фигуры для масштабирования
   }
+  
 
   function draggableOn() {
     const stage = stageRef.current;
@@ -212,10 +223,10 @@ export default function Canvas() {
     stage.draggable(false);
   }
 
-  function handleShapeClick(e: Konva.KonvaEventObject<MouseEvent>, shapeId: string) {
+  const handleShapeClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>, shapeId: string) => {
     setSelectedShapeId(shapeId);
     setAnchorEl(e.evt.currentTarget as HTMLElement);
-  }
+  }, []);
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -308,7 +319,7 @@ export default function Canvas() {
             switch (shape.type) {
               case "rectangle":
                 return (
-                  <Rect
+                  <MemoizedRect
                     onClick={(e) => handleShapeClick(e, shape.id)}
                     key={shape.id}
                     x={shape.x}
@@ -322,7 +333,7 @@ export default function Canvas() {
                 );
               case "circle":
                 return (
-                  <Circle
+                  <MemoizedCircle
                     onClick={(e) => handleShapeClick(e, shape.id)}
                     key={shape.id}
                     x={shape.x}
@@ -337,7 +348,7 @@ export default function Canvas() {
                 const size = shape.size;
                 const halfSize = size / 2;
                 return (
-                  <Line
+                  <MemoizedTriangle
                     onClick={(e) => handleShapeClick(e, shape.id)}
                     key={shape.id}
                     points={[
@@ -348,7 +359,6 @@ export default function Canvas() {
                     fill={shape.color}
                     closed
                     draggable
-                  // onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
                   />
                 );
               default:
@@ -382,7 +392,7 @@ export default function Canvas() {
             onChange={(_e, newSize) => handleSizeChange(newSize as number)}
             min={50}
             max={150}
-            sx={{ width: 1/2 }}
+            sx={{ width: 1 / 2 }}
           />
         </MenuItem>
       </Menu>
@@ -403,16 +413,16 @@ export default function Canvas() {
           <Typography>Используйте кнопки на панели инструментов для управления:</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Добавление фигур" для добавления фигур</Typography>
+          <Typography>   - Режим "Классический" для добавления фигур</Typography>
         </MenuItem>
         <MenuItem>
           <Typography>   - Режим "Рисование" для добавления и изменения размера фигуры на лету</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Перемещение" для перемещения сцены</Typography>
+          <Typography>   - Режим "Перемещение" для перемещения холста</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Сброс" для очистки сцены</Typography>
+          <Typography>   - Режим "Сброс" для очистки холста</Typography>
         </MenuItem>
         <MenuItem>
           <Typography>   - Справка</Typography>
@@ -421,19 +431,19 @@ export default function Canvas() {
           <Typography>Возможности:</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Изменение масштаба сцены - используйте колесико мыши</Typography>
+          <Typography>   - Изменение масштаба холста - используйте колесико мыши</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - В режиме "Добавление фигур" - нажмите на холст, чтобы добавить фигуру</Typography>
-        </MenuItem>
-        <MenuItem>
-          <Typography>   - В режимах "Добавление фигур", "Рисование" и "Перемещение" - нажмите и удерживайте фигуру, чтобы переместить ее</Typography>
-        </MenuItem>
-        <MenuItem>
-          <Typography>   - В режимах "Добавление фигур", "Рисование" и "Перемещение" - нажмите на фигуру, чтобы изменить цвет или размер в выпадающем меню</Typography>
+          <Typography>   - В режиме "Классический" - нажмите на холст, чтобы добавить фигуру</Typography>
         </MenuItem>
         <MenuItem>
           <Typography>   - В режиме "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - В режимах "Классический", "Рисование" и "Перемещение" - нажмите на фигуру, чтобы изменить ее цвет или размер в выпадающем меню</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - В режимах "Классический", "Рисование" и "Перемещение" - нажмите и удерживайте фигуру, чтобы переместить ее</Typography>
         </MenuItem>
       </Menu>
     </>
