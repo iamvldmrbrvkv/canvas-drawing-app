@@ -27,7 +27,7 @@ Canvas Drawing App — это веб-приложение для создани�
 ## Установка и запуск
 
 ### Клонируйте репозиторий
-`git clone https://github.com/iamvldmrbrvkv/canvas-drawing-app`
+`git clone https://github.com/iamvldmrbrvkv/canvas-drawing-app`  
 `cd <папка проекта>`
 
 ### Установите зависимости
