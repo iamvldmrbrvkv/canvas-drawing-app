@@ -2,6 +2,12 @@ import { useRef, useState } from "react";
 import Konva from "konva";
 import { Stage, Layer, Rect, Circle, Line } from "react-konva";
 import { v4 as uuidv4 } from "uuid";
+import PanToolIcon from '@mui/icons-material/PanTool';
+import IconButton from '@mui/material/IconButton';
+import BrushIcon from '@mui/icons-material/Brush';
+import { Box } from "@mui/material";
+import AdsClickIcon from '@mui/icons-material/AdsClick';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 // Тип фигуры
 type ShapeType = "rectangle" | "circle" | "triangle";
@@ -23,8 +29,47 @@ export default function Canvas() {
   const [shapes, setShapes] = useState<Shape[]>([]);
   // Начальный масштаб сцены
   const [scale, setScale] = useState<number>(1);
-  // Состояние для отслеживания сдвига сцены
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [scaleShapeId, setScaleShapeId] = useState<string>('');
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  /* const [isActiveIconButton, setIsActiveIconButton] = useState<boolean>(false);
+  const [isActiveBrushIcon, setisActiveBrushIcon] = useState<boolean>(false);
+  const [isActivePanToolIcon, setIsActivePanToolIcon] = useState<boolean>(false); */
+  const [activeButton, setActiveButton] = useState<'pan' | 'brush' | 'click' | null>(null);
+
+  const handleClickIconButton = () => {
+    setActiveButton(activeButton === 'click' ? null : 'click');
+    setIsDrawing(false);
+  };
+
+  const handleClickBrushIcon = () => {
+    setActiveButton(activeButton === 'brush' ? null : 'brush');
+    setIsDrawing(true);
+  };
+
+  const handleClickPanToolIcon = () => {
+    setActiveButton(activeButton === 'pan' ? null : 'pan');
+    setIsDrawing(false);
+  };
+
+  function handleReset() {
+    setShapes([]); // Очистить все фигуры
+    setScale(1);   // Сбросить масштаб
+    setScaleShapeId(''); // Очистить id фигуры для масштабирования
+  }
+
+  function draggableOn() {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    stage.draggable(true);
+  }
+
+  function draggableOff() {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    stage.draggable(false);
+  }
 
   // Функция для генерации случайного цвета
   const getRandomColor = () => {
@@ -37,12 +82,17 @@ export default function Canvas() {
   };
 
   // Обработчик клика по сцене
-  function handleStageClick(_e: Konva.KonvaEventObject<MouseEvent>) {
-    if (isDragging) return; // Если сцена двигалась, не добавляем фигуру
-    
-    const stage = stageRef.current; // Получаем ссылку на сцену
-    if (!stage) return; // Если сцена не создана, выходим
+  function handleAddShape(e: Konva.KonvaEventObject<MouseEvent>) {
 
+    const stage = stageRef.current; // Получаем ссылку на сцену
+    if (!stage || stage.draggable()) return; // Если сцена не создана или уже draggable, выходим
+
+    const clickedShape = e.target;
+    console.log("clickedShape", clickedShape)
+
+    if (clickedShape.name() !== 'background') {
+      return; // Если клик был на фоне, не добавляем новую фигуру
+    }
     // Получаем координаты клика с учётом сдвига сцены
     const pointer = stage.getPointerPosition(); // Получаем координаты курсора
     if (!pointer) return; // Если координаты не найдены, выходим
@@ -63,9 +113,10 @@ export default function Canvas() {
     const shapeTypes: ShapeType[] = ["rectangle", "circle", "triangle"];
     const type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
 
+    const id = uuidv4()
     // Создаём новую фигуру
     const newShape: Shape = {
-      id: uuidv4(),
+      id,
       type,
       x: correctedX,
       y: correctedY,
@@ -74,19 +125,42 @@ export default function Canvas() {
     };
 
     setShapes([...shapes, newShape]);
+    setScaleShapeId(id)
+    console.log("handleAddShape")
+  }
+
+  function handleStartDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
+    const stage = stageRef.current; // Получаем ссылку на сцену
+    if (!stage || stage.draggable()) return; // Если сцена не создана или уже draggable, выходим
+    if (scaleShapeId !== '' && isDrawing) {
+      const updatedShapes = shapes.map((shape) =>
+        shape.id === scaleShapeId
+          ? { ...shape, size: shape.size + 1 }
+          : shape
+      );
+      setShapes(updatedShapes);
+      console.log("handleStartDrawingShape");
+    }
+  }
+
+  function handleStopDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
+    if (scaleShapeId !== '') {
+      setScaleShapeId('');
+      console.log("handleStopDrawingShape")
+    }
   }
 
   // Обработчик для изменения курсора при начале перетаскивания
   function handleDragStart() {
-    setIsDragging(true);
     document.body.style.cursor = "grabbing";
+    console.log("handleDragStart")
   }
   // Обработчик для изменения курсора при окончании перетаскивания
   function handleDragEnd() {
-    setIsDragging(false);
     document.body.style.cursor = "default";
+    console.log("handleDragEnd")
   }
-  
+
   // Обработчик колесика мыши для зумирования относительно курсора
   function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     const stage = stageRef.current;
@@ -144,71 +218,110 @@ export default function Canvas() {
   }
 
   return (
-    <Stage
-      width={window.innerWidth}
-      height={window.innerHeight}
-      draggable
-      ref={stageRef}
-      onMouseUp={handleStageClick}
-      onWheel={handleWheel}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <Layer>
-        {/* Фон */}
-        {/* Делаем прямоугольник такой ширины и сдвигаем его относителоьно сцены чтобы он покрывал ее с запасом */}
-        <Rect x={-100000} y={-100000} width={200000} height={200000} fill="lightgrey" />
+    <>
+      <Box
+        sx={{
+          position: 'fixed',
+          top: '30px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+        }}
+      >
+        <IconButton
+          onMouseDown={handleClickIconButton}
+          onMouseUp={draggableOff}
+          sx={{ color: activeButton === 'click' ? 'red' : '' }}
+        >
+          <AdsClickIcon />
+        </IconButton>
+        <IconButton
+          onMouseDown={handleClickBrushIcon}
+          onMouseUp={draggableOff}
+          sx={{ color: activeButton === 'brush' ? 'red' : '' }}
+        >
+          <BrushIcon />
+        </IconButton>
+        <IconButton
+          onMouseDown={handleClickPanToolIcon}
+          onMouseUp={draggableOn}
+          sx={{ color: activeButton === 'pan' ? 'red' : '' }}
+        >
+          <PanToolIcon />
+        </IconButton>
+        <IconButton
+          onClick={handleReset}
+        >
+          <RefreshIcon />
+        </IconButton>
+      </Box>
+      <Stage
+        width={window.innerWidth}
+        height={window.innerHeight}
+        ref={stageRef}
+        onMouseDown={handleAddShape}
+        onMouseMove={handleStartDrawingShape}
+        onMouseUp={handleStopDrawingShape}
+        onWheel={handleWheel}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <Layer>
+          {/* Фон */}
+          {/* Делаем прямоугольник такой ширины и сдвигаем его относителоьно сцены чтобы он покрывал ее с запасом */}
+          <Rect x={-100000} y={-100000} width={200000} height={200000} fill="lightgrey" name="background" />
 
-        {/* Отрисовка фигур */}
-        {shapes.map((shape) => {
-          switch (shape.type) {
-            case "rectangle":
-              return (
-                <Rect
-                  key={shape.id}
-                  x={shape.x}
-                  y={shape.y}
-                  width={shape.size}
-                  height={shape.size}
-                  fill={shape.color}
-                  draggable
-                  onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
-                />
-              );
-            case "circle":
-              return (
-                <Circle
-                  key={shape.id}
-                  x={shape.x}
-                  y={shape.y}
-                  radius={shape.size / 2}
-                  fill={shape.color}
-                  draggable
-                  onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
-                />
-              );
-            case "triangle":
-              const size = shape.size;
-              const halfSize = size / 2;
-              return (
-                <Line
-                  key={shape.id}
-                  points={[
-                    shape.x, shape.y - halfSize, // Верхняя точка
-                    shape.x - halfSize, shape.y + halfSize, // Левая нижняя
-                    shape.x + halfSize, shape.y + halfSize, // Правая нижняя
-                  ]}
-                  fill={shape.color}
-                  closed
-                  draggable
-                  onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
-                />
-              );
-            default:
-              return null;
-          }
-        })}
-      </Layer>
-    </Stage>
+          {/* Отрисовка фигур */}
+          {shapes.map((shape) => {
+            switch (shape.type) {
+              case "rectangle":
+                return (
+                  <Rect
+                    key={shape.id}
+                    x={shape.x}
+                    y={shape.y}
+                    width={shape.size}
+                    height={shape.size}
+                    fill={shape.color}
+                    draggable
+                    onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
+                  />
+                );
+              case "circle":
+                return (
+                  <Circle
+                    key={shape.id}
+                    x={shape.x}
+                    y={shape.y}
+                    radius={shape.size / 2}
+                    fill={shape.color}
+                    draggable
+                    onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
+                  />
+                );
+              case "triangle":
+                const size = shape.size;
+                const halfSize = size / 2;
+                return (
+                  <Line
+                    key={shape.id}
+                    points={[
+                      shape.x, shape.y - halfSize, // Верхняя точка
+                      shape.x - halfSize, shape.y + halfSize, // Левая нижняя
+                      shape.x + halfSize, shape.y + halfSize, // Правая нижняя
+                    ]}
+                    fill={shape.color}
+                    closed
+                    draggable
+                  // onDragMove={(e) => handleShapeDragMove(e, shape.id)} // Обновляем позицию
+                  />
+                );
+              default:
+                return null;
+            }
+          })}
+        </Layer>
+      </Stage>
+    </>
   );
 }
