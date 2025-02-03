@@ -61,7 +61,7 @@ export default function Canvas() {
     // Получаем ссылку на сцену
     const stage = stageRef.current;
     const clickedShape = e.target;
-    // Если сцена не создана или уже draggable или сли клик был на фоне, выходим
+    // Если сцена не создана или уже draggable или если клик был на фоне, выходим
     if (!stage || stage.draggable() || clickedShape.name() !== 'background') return;
     // Получаем координаты клика с учётом сдвига сцены
     // Получаем координаты курсора
