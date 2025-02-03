@@ -407,6 +407,7 @@ export default function Canvas() {
             style: { backgroundColor: "lightgrey", minWidth: 170 },
           },
         }}
+        disableAutoFocusItem={true}
       >
         <MenuItem sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography>Цвет</Typography>
