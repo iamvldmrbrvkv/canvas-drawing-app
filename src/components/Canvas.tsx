@@ -7,7 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import BrushIcon from '@mui/icons-material/Brush';
 import AdsClickIcon from '@mui/icons-material/AdsClick';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { Box, Menu, MenuItem, Slider, Typography } from "@mui/material";
+import { Box, Menu, MenuItem, Slider, Typography, Tooltip } from "@mui/material";
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { MemoizedRect } from "./Rectangle";
 import { MemoizedCircle } from "./Circle";
@@ -286,37 +286,47 @@ export default function Canvas() {
           zIndex: 10,
         }}
       >
-        <IconButton
-          onMouseDown={handleClickIconButton}
-          onMouseUp={draggableOff}
-          sx={{ color: activeButton === 'click' ? 'red' : '' }}
-        >
-          <AdsClickIcon />
-        </IconButton>
-        <IconButton
-          onMouseDown={handleClickBrushIcon}
-          onMouseUp={draggableOff}
-          sx={{ color: activeButton === 'brush' ? 'red' : '' }}
-        >
-          <BrushIcon />
-        </IconButton>
-        <IconButton
-          onMouseDown={handleClickPanToolIcon}
-          onMouseUp={draggableOn}
-          sx={{ color: activeButton === 'pan' ? 'red' : '' }}
-        >
-          <PanToolIcon />
-        </IconButton>
-        <IconButton
-          onClick={handleReset}
-        >
-          <RefreshIcon />
-        </IconButton>
-        <IconButton
-          onClick={handleHelpClick}
-        >
-          <QuestionMarkIcon />
-        </IconButton>
+        <Tooltip title={`Режим "Классический" - нажмите на холст, чтобы добавить фигуру`}>
+          <IconButton
+            onMouseDown={handleClickIconButton}
+            onMouseUp={draggableOff}
+            sx={{ color: activeButton === 'click' ? 'red' : '' }}
+          >
+            <AdsClickIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={`Режим "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью, затем отпустите`}>
+          <IconButton
+            onMouseDown={handleClickBrushIcon}
+            onMouseUp={draggableOff}
+            sx={{ color: activeButton === 'brush' ? 'red' : '' }}
+          >
+            <BrushIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={`Режим "Перемещение холста" - нажмите на пустое место на холсте и не отпуская курсор мыши двигайте мышью, затем отпустите`}>
+          <IconButton
+            onMouseDown={handleClickPanToolIcon}
+            onMouseUp={draggableOn}
+            sx={{ color: activeButton === 'pan' ? 'red' : '' }}
+          >
+            <PanToolIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={`Режим "Сброс" для очистки холста`}>
+          <IconButton
+            onClick={handleReset}
+          >
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={`Справка`}>
+          <IconButton
+            onClick={handleHelpClick}
+          >
+            <QuestionMarkIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
       <Stage
         width={window.innerWidth}
@@ -440,7 +450,7 @@ export default function Canvas() {
           <Typography>   - Режим "Рисование" для добавления и изменения размера фигуры на лету</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Перемещение" для перемещения холста</Typography>
+          <Typography>   - Режим "Перемещение холста" для перемещения холста</Typography>
         </MenuItem>
         <MenuItem>
           <Typography>   - Режим "Сброс" для очистки холста</Typography>
@@ -459,6 +469,9 @@ export default function Canvas() {
         </MenuItem>
         <MenuItem>
           <Typography>   - В режиме "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography>   - В режиме "Перемещение холста" - нажмите на пустое место на холсте и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
         </MenuItem>
         <MenuItem>
           <Typography>   - В режимах "Классический", "Рисование" и "Перемещение" - нажмите на фигуру, чтобы изменить ее цвет или размер в выпадающем меню</Typography>
