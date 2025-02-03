@@ -13,7 +13,6 @@ import { MemoizedRect } from "./Rectangle";
 import { MemoizedCircle } from "./Circle";
 import { MemoizedTriangle } from "./Triangle";
 
-
 // Тип фигуры
 type ShapeType = "rectangle" | "circle" | "triangle";
 
