@@ -33,11 +33,17 @@ export default function Canvas() {
   const [shapes, setShapes] = useState<Shape[]>([]);
   // Начальный масштаб сцены
   const [scale, setScale] = useState<number>(1);
+  // Состояние для хранения id фигуры для масштабирования
   const [scaleShapeId, setScaleShapeId] = useState<string>('');
+  // Состояние рисования
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  // Состояние активной кнопки
   const [activeButton, setActiveButton] = useState<'pan' | 'brush' | 'click' | null>('click');
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  // Состояние для позиции меню редактиктирования фигуры
+  const [menuPosition, setMenuPosition] = useState<{ left: number; top: number } | null>(null);
+  // Состояния для хранения id выбранной фигуры для редактирования
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
+  // Состояние якоря относительно которого будет открываться меню справки
   const [helpMenuAnchorEl, setHelpMenuAnchorEl] = useState<null | HTMLElement>(null);
 
   // Функция для генерации случайного цвета
@@ -96,6 +102,7 @@ export default function Canvas() {
     setScaleShapeId(id)
   }
 
+  // Обработчик для начала рисования фигуры
   function handleStartDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
     const stage = stageRef.current; // Получаем ссылку на сцену
     if (!stage || stage.draggable()) return; // Если сцена не создана или уже draggable, выходим
@@ -109,6 +116,7 @@ export default function Canvas() {
     }
   }
 
+  // Обработчик для окончания рисования фигуры
   function handleStopDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
     if (scaleShapeId !== '') {
       setScaleShapeId('');
@@ -179,6 +187,7 @@ export default function Canvas() {
     ));
   }, []);
 
+  // ОБработчики для изменения цвета кнопок меню и изменениюя режимов
   const handleClickIconButton = () => {
     setActiveButton(activeButton === 'click' ? null : 'click');
     setIsDrawing(false);
@@ -194,20 +203,21 @@ export default function Canvas() {
     setIsDrawing(false);
   };
 
+  // Обработчик для сброса сцены
   function handleReset() {
     const stage = stageRef.current;
     if (stage) {
       stage.scale({ x: 1, y: 1 });
-      stage.position({ x: 0, y: 0 }); // Сбросить позицию
+      stage.position({ x: 0, y: 0 });
       stage.batchDraw();
     }
-    
+
     setShapes([]); // Очистить все фигуры
     setScale(1);   // Сбросить масштаб
     setScaleShapeId(''); // Очистить id фигуры для масштабирования
   }
-  
 
+  // Обработички для включения / отключения draggable сцены
   function draggableOn() {
     const stage = stageRef.current;
     if (!stage) return;
@@ -222,35 +232,46 @@ export default function Canvas() {
     stage.draggable(false);
   }
 
+  // Обработчки для отрытия меню редактирования фигуры
   const handleShapeClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>, shapeId: string) => {
     setSelectedShapeId(shapeId);
-    setAnchorEl(e.evt.currentTarget as HTMLElement);
+    // Сохраняем координаты клика для позиционирования меню редактирования
+    setMenuPosition({ left: e.evt.clientX, top: e.evt.clientY });
   }, []);
 
+  // Сбрасываем позицию меню редактирования фигуры
   const handleMenuClose = () => {
-    setAnchorEl(null);
+    setMenuPosition(null);
   };
 
+  // Обработчк для изменения цвета фигуры
   const handleChangeColor = (color: string) => {
     if (selectedShapeId) {
       const updatedShapes = shapes.map((shape) =>
-        shape.id === selectedShapeId ? { ...shape, color } : shape
+        shape.id === selectedShapeId
+          ? { ...shape, color }
+          : shape
       );
       setShapes(updatedShapes);
     }
     handleMenuClose();
   };
 
+  // Обработчк для изменения размера фигуры
   const handleSizeChange = (size: number) => {
     if (selectedShapeId) {
       const updatedShapes = shapes.map((shape) =>
-        shape.id === selectedShapeId ? { ...shape, size } : shape
+        shape.id === selectedShapeId
+          ? { ...shape, size }
+          : shape
       );
       setShapes(updatedShapes);
     }
   };
 
+  // Обработчик для открытия меню справки
   const handleHelpClick = (event: React.MouseEvent<HTMLElement>) => {
+    // Eсли есть якорь то закрываем меню, если нет то открываем
     setHelpMenuAnchorEl(helpMenuAnchorEl ? null : event.currentTarget);
   };
 
@@ -367,8 +388,9 @@ export default function Canvas() {
         </Layer>
       </Stage>
       <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
+        anchorReference="anchorPosition"
+        anchorPosition={menuPosition || { top: 0, left: 0 }}
+        open={Boolean(menuPosition)}
         onClose={handleMenuClose}
         slotProps={{
           paper: {
