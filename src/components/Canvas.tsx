@@ -58,36 +58,29 @@ export default function Canvas() {
 
   // Обработчик клика по сцене
   function handleAddShape(e: Konva.KonvaEventObject<MouseEvent>) {
-
-    const stage = stageRef.current; // Получаем ссылку на сцену
-    if (!stage || stage.draggable()) return; // Если сцена не создана или уже draggable, выходим
-
+    // Получаем ссылку на сцену
+    const stage = stageRef.current;
     const clickedShape = e.target;
-
-    if (clickedShape.name() !== 'background') {
-      return; // Если клик был на фоне, не добавляем новую фигуру
-    }
+    // Если сцена не создана или уже draggable или сли клик был на фоне, выходим
+    if (!stage || stage.draggable() || clickedShape.name() !== 'background') return;
     // Получаем координаты клика с учётом сдвига сцены
-    const pointer = stage.getPointerPosition(); // Получаем координаты курсора
+    // Получаем координаты курсора
+    const pointer = stage.getPointerPosition();
     if (!pointer) return; // Если координаты не найдены, выходим
-
     // Считываем сдвиг сцены (сколько она перемещена)
     const stagePos = stage.position(); // Получаем позицию сцены
     const offsetX = stagePos.x;
     const offsetY = stagePos.y;
-
     // Корректируем координаты с учётом сдвига для правильного отображения фигуры в сцене а не в окне просмотра, так сцена может быть свдинута
-    const correctedX = (pointer.x - offsetX) / scale; // Делим на масштаб, чтобы координаты были правильные
-    const correctedY = (pointer.y - offsetY) / scale; // Делим на масштаб, чтобы координаты были правильные
-
+    // Делим на масштаб, чтобы координаты были правильные
+    const correctedX = (pointer.x - offsetX) / scale;
+    const correctedY = (pointer.y - offsetY) / scale;
     // Выбираем случайный цвет
     const color = getRandomColor();
-
     // Рандомно выбираем фигуру
     const shapeTypes: ShapeType[] = ["rectangle", "circle", "triangle"];
     const type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
-
-    const id = uuidv4()
+    const id = uuidv4();
     // Создаём новую фигуру
     const newShape: Shape = {
       id,
@@ -97,15 +90,16 @@ export default function Canvas() {
       size: 50 + Math.random() * 50,
       color,
     };
-
     setShapes([...shapes, newShape]);
     setScaleShapeId(id)
   }
 
   // Обработчик для начала рисования фигуры
   function handleStartDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
-    const stage = stageRef.current; // Получаем ссылку на сцену
-    if (!stage || stage.draggable()) return; // Если сцена не создана или уже draggable, выходим
+    // Получаем ссылку на сцену
+    const stage = stageRef.current;
+    // Если сцена не создана или draggable, выходим
+    if (!stage || stage.draggable()) return;
     if (scaleShapeId !== '' && isDrawing) {
       const updatedShapes = shapes.map((shape) =>
         shape.id === scaleShapeId
@@ -127,6 +121,7 @@ export default function Canvas() {
   function handleDragStart() {
     document.body.style.cursor = "grabbing";
   }
+
   // Обработчик для изменения курсора при окончании перетаскивания
   function handleDragEnd() {
     document.body.style.cursor = "default";
@@ -136,44 +131,37 @@ export default function Canvas() {
   function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
     const stage = stageRef.current;
     if (!stage) return;
-
     const scaleBy = 1.1;
     let newScale = scale;
-
     // Прокрутка вверх — увеличиваем масштаб, вниз — уменьшаем
     if (e.evt.deltaY > 0) {
       newScale /= scaleBy;
     } else {
       newScale *= scaleBy;
     }
-
     // Ограничиваем пределы масштаба
     if (newScale > 10) newScale = 10;
     if (newScale < 0.1) newScale = 0.1;
-
-    const pointer = stage.getPointerPosition(); // Получаем позицию курсора на сцене до зума
+    // Получаем позицию курсора на сцене до зума
+    const pointer = stage.getPointerPosition();
     if (!pointer) return;
-
-    const oldPos = stage.position(); // Получаем позицию сцены
+    // Получаем позицию сцены
+    const oldPos = stage.position();
+    // Координаты курсора относительно сцены до зума, но с учетом масштаба
     const mousePointTo = {
-      x: (pointer.x - oldPos.x) / scale, // Координаты курсора относительно сцены до зума, но с учетом масштаба
+      x: (pointer.x - oldPos.x) / scale,
       y: (pointer.y - oldPos.y) / scale,
     };
-
     // Устанавливаем новый масштаб
     stage.scale({ x: newScale, y: newScale });
-
     // Пересчитываем позицию сцены относительно координат курсора на сцене c учетом нового масштаба
     const newPos = {
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     };
-
     // Перемещаем сцену в новые координаты курсора
     stage.position(newPos);
-
     setScale(newScale);
-
     // Перерисовываем сцену
     stage.batchDraw();
   }
@@ -211,24 +199,24 @@ export default function Canvas() {
       stage.position({ x: 0, y: 0 });
       stage.batchDraw();
     }
-
-    setShapes([]); // Очистить все фигуры
-    setScale(1);   // Сбросить масштаб
-    setScaleShapeId(''); // Очистить id фигуры для масштабирования
+    // Очистить все фигуры
+    setShapes([]);
+    // Сбросить масштаб
+    setScale(1);
+    // Очистить id фигуры для масштабирования
+    setScaleShapeId('');
   }
 
   // Обработички для включения / отключения draggable сцены
   function draggableOn() {
     const stage = stageRef.current;
     if (!stage) return;
-
     stage.draggable(true);
   }
 
   function draggableOff() {
     const stage = stageRef.current;
     if (!stage) return;
-
     stage.draggable(false);
   }
 
