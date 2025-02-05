@@ -87,7 +87,7 @@ export default function Canvas() {
       type,
       x: correctedX,
       y: correctedY,
-      size: 50 + Math.random() * 50,
+      size: 50 + Math.floor(Math.random() * 101),
       color,
     };
     setShapes([...shapes, newShape]);
@@ -101,9 +101,10 @@ export default function Canvas() {
     // Если сцена не создана или draggable, выходим
     if (!stage || stage.draggable()) return;
     if (scaleShapeId !== '' && isDrawing) {
+      const maxSize = 300;
       const updatedShapes = shapes.map((shape) =>
         shape.id === scaleShapeId
-          ? { ...shape, size: shape.size + 1 }
+          ? { ...shape, size: Math.min(shape.size + 1, maxSize) }
           : shape
       );
       setShapes(updatedShapes);
@@ -411,8 +412,9 @@ export default function Canvas() {
             value={selectedShapeId ? shapes.find(shape => shape.id === selectedShapeId)?.size || 50 : 50}
             onChange={(_e, newSize) => handleSizeChange(newSize as number)}
             min={50}
-            max={150}
+            max={300}
             sx={{ width: 1 / 2 }}
+            valueLabelDisplay="auto"
           />
         </MenuItem>
       </Menu>
