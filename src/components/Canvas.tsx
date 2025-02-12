@@ -45,6 +45,8 @@ export default function Canvas() {
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   // Состояние якоря относительно которого будет открываться меню справки
   const [helpMenuAnchorEl, setHelpMenuAnchorEl] = useState<null | HTMLElement>(null);
+  // Создаём useRef для хранения предыдущей X-координаты
+  const prevXRef = useRef<number | null>(null);
 
   // Функция для генерации случайного цвета
   const getRandomColor = () => {
@@ -91,31 +93,45 @@ export default function Canvas() {
       color,
     };
     setShapes([...shapes, newShape]);
-    setScaleShapeId(id)
+    setScaleShapeId(id);
   }
 
   // Обработчик для начала рисования фигуры
   function handleStartDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
     // Получаем ссылку на сцену
     const stage = stageRef.current;
-    // Если сцена не создана или draggable, выходим
-    if (!stage || stage.draggable()) return;
-    if (scaleShapeId !== '' && isDrawing) {
-      const maxSize = 300;
-      const updatedShapes = shapes.map((shape) =>
-        shape.id === scaleShapeId
-          ? { ...shape, size: Math.min(shape.size + 1, maxSize) }
-          : shape
-      );
-      setShapes(updatedShapes);
+    // Если сцена не создана, draggable, нет scaleShapeId или isDrawing = false, выходим
+    if (!stage || stage.draggable() || scaleShapeId === '' || !isDrawing) return;
+    // Получаем координаты курсора
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return; // Если координаты не найдены, выходим
+    // Сохраняем текущую X-координату мыши (currentX)
+    const currentX = pointer.x;
+    // Берём предыдущее значение prevX (храним его в prevXRef)
+    const prevX = prevXRef.current;
+    // Обрабатываем первый случай когда prevX ещё не был установлен
+    if (prevX === null) {
+      prevXRef.current = currentX;
+      return;
     }
+    // Определяем, в какую сторону двигается мышь и разницу размера фигуры в пикселях
+    const deltaX = currentX - prevX; // deltaX > 0 - вправо, deltaX < 0 - влево
+    // Устанавливаем динамично меняющийся размер фигуры с ограничениями 10 и 300 пикселей
+    setShapes((prevShapes) =>
+      prevShapes.map((shape) =>
+        shape.id === scaleShapeId
+          ? { ...shape, size: Math.max(10, Math.min(shape.size + deltaX, 300)) }
+          : shape
+      )
+    );
+    // Обновляем предыдущую X-координату (prevX) чтобы не было скачков при расчете const deltaX = currentX - prevX
+    prevXRef.current = currentX;
   }
 
   // Обработчик для окончания рисования фигуры
   function handleStopDrawingShape(_e: Konva.KonvaEventObject<MouseEvent>) {
-    if (scaleShapeId !== '') {
-      setScaleShapeId('');
-    }
+    prevXRef.current = null;
+    setScaleShapeId('');
   }
 
   // Обработчик для изменения курсора при начале перетаскивания
@@ -411,7 +427,7 @@ export default function Canvas() {
           <Slider
             value={selectedShapeId ? shapes.find(shape => shape.id === selectedShapeId)?.size || 50 : 50}
             onChange={(_e, newSize) => handleSizeChange(newSize as number)}
-            min={50}
+            min={10}
             max={300}
             sx={{ width: 1 / 2 }}
             valueLabelDisplay="auto"
@@ -459,7 +475,7 @@ export default function Canvas() {
           <Typography>   - В режиме "Классический" - нажмите на холст, чтобы добавить фигуру</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - В режиме "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
+          <Typography>   - В режиме "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью влево или вправо для изменения размера фигуры, затем отпустите</Typography>
         </MenuItem>
         <MenuItem>
           <Typography>   - В режиме "Перемещение холста" - нажмите на пустое место на холсте и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
