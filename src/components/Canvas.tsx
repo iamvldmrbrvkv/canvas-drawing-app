@@ -275,9 +275,9 @@ export default function Canvas() {
   };
 
   // Обработчик для открытия меню справки
-  const handleHelpClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleHelpClick = (e: React.MouseEvent<HTMLElement>) => {
     // Eсли есть якорь то закрываем меню, если нет то открываем
-    setHelpMenuAnchorEl(helpMenuAnchorEl ? null : event.currentTarget);
+    setHelpMenuAnchorEl(helpMenuAnchorEl ? null : e.currentTarget);
   };
 
   return (
