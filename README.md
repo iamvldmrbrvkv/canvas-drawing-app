@@ -13,15 +13,14 @@
 - Перемещение холста в режиме "Панорамирование".
 - Сброс холста и удаление всех фигур.
 - Справочное меню с инструкциями по использованию.
-- Использованные технологии
 
 ## Приложение разработано с использованием следующих технологий:
 
-- [TypeScript](https://www.typescriptlang.org/)
-- [React](https://react.dev/)
-- [React-Konva (для работы с холстом)](https://konvajs.org/docs/react/)
-- [Material-UI (для UI-компонентов)](https://mui.com/)
-- [UUID (для генерации уникальных идентификаторов фигур)](https://www.npmjs.com/package/uuid)
+- [TypeScript](https://www.typescriptlang.org/).
+- [React](https://react.dev/).
+- [React-Konva](https://konvajs.org/docs/react/) (для работы с холстом).
+- [Material-UI](https://mui.com/) (для UI-компонентов).
+- [UUID](https://www.npmjs.com/package/uuid) (для генерации уникальных идентификаторов фигур).
 
 
 ## Установка и запуск
