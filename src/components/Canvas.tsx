@@ -39,7 +39,7 @@ export default function Canvas() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   // Состояние активной кнопки
   const [activeButton, setActiveButton] = useState<'pan' | 'brush' | 'click' | null>('click');
-  // Состояние для позиции меню редактиктирования фигуры
+  // Состояние для позиции меню редактирования фигуры
   const [menuPosition, setMenuPosition] = useState<{ left: number; top: number } | null>(null);
   // Состояния для хранения id выбранной фигуры для редактирования
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
@@ -192,7 +192,7 @@ export default function Canvas() {
     ));
   }, []);
 
-  // ОБработчики для изменения цвета кнопок меню и изменениюя режимов
+  // ОБработчики для изменения цвета кнопок меню и изменения режимов
   const handleClickIconButton = () => {
     setActiveButton(activeButton === 'click' ? null : 'click');
     setIsDrawing(false);
@@ -224,7 +224,7 @@ export default function Canvas() {
     setScaleShapeId('');
   }
 
-  // Обработички для включения / отключения draggable сцены
+  // Обработчики для включения / отключения draggable сцены
   function draggableOn() {
     const stage = stageRef.current;
     if (!stage) return;
@@ -237,7 +237,7 @@ export default function Canvas() {
     stage.draggable(false);
   }
 
-  // Обработчки для отрытия меню редактирования фигуры
+  // Обработчики для отрытия меню редактирования фигуры
   const handleShapeClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>, shapeId: string) => {
     setSelectedShapeId(shapeId);
     // Сохраняем координаты клика для позиционирования меню редактирования
@@ -249,7 +249,7 @@ export default function Canvas() {
     setMenuPosition(null);
   };
 
-  // Обработчк для изменения цвета фигуры
+  // Обработчик для изменения цвета фигуры
   const handleChangeColor = (color: string) => {
     if (selectedShapeId) {
       const updatedShapes = shapes.map((shape) =>
@@ -262,7 +262,7 @@ export default function Canvas() {
     handleMenuClose();
   };
 
-  // Обработчк для изменения размера фигуры
+  // Обработчик для изменения размера фигуры
   const handleSizeChange = (size: number) => {
     if (selectedShapeId) {
       const updatedShapes = shapes.map((shape) =>
@@ -451,40 +451,40 @@ export default function Canvas() {
           <Typography>Используйте кнопки на панели инструментов для управления:</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Классический" для добавления фигур</Typography>
+          <Typography>- Режим "Классический" для добавления фигур</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Рисование" для добавления и изменения размера фигуры на лету</Typography>
+          <Typography>- Режим "Рисование" для добавления и изменения размера фигуры на лету</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Перемещение холста" для перемещения холста</Typography>
+          <Typography>- Режим "Перемещение холста" для перемещения холста</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Режим "Сброс" для очистки холста</Typography>
+          <Typography>- Режим "Сброс" для очистки холста</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Справка</Typography>
+          <Typography>- Справка</Typography>
         </MenuItem>
         <MenuItem>
           <Typography>Возможности:</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - Изменение масштаба холста - используйте колесико мыши</Typography>
+          <Typography>- Изменение масштаба холста - используйте колесико мыши</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - В режиме "Классический" - нажмите на холст, чтобы добавить фигуру</Typography>
+          <Typography>- В режиме "Классический" - нажмите на холст, чтобы добавить фигуру</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - В режиме "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью влево или вправо для изменения размера фигуры, затем отпустите</Typography>
+          <Typography>- В режиме "Рисование" - нажмите на холст и не отпуская курсор мыши двигайте мышью влево или вправо для изменения размера фигуры, затем отпустите</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - В режиме "Перемещение холста" - нажмите на пустое место на холсте и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
+          <Typography>- В режиме "Перемещение холста" - нажмите на пустое место на холсте и не отпуская курсор мыши двигайте мышью, затем отпустите</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - В режимах "Классический", "Рисование" и "Перемещение" - нажмите на фигуру, чтобы изменить ее цвет или размер в выпадающем меню</Typography>
+          <Typography>- В режимах "Классический", "Рисование" и "Перемещение" - нажмите на фигуру, чтобы изменить ее цвет или размер в выпадающем меню</Typography>
         </MenuItem>
         <MenuItem>
-          <Typography>   - В режимах "Классический", "Рисование" и "Перемещение" - нажмите и удерживайте фигуру, чтобы переместить ее</Typography>
+          <Typography>- В режимах "Классический", "Рисование" и "Перемещение" - нажмите и удерживайте фигуру, чтобы переместить ее</Typography>
         </MenuItem>
       </Menu>
     </>
